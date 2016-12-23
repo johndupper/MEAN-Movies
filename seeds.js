@@ -6,47 +6,49 @@ var Movie = require('./models/movie');
 if (process.env.MONGODB_URI) {
     mongoose.connect(process.env.MONGODB_URI);
 } else {
-    mongoose.connect('http://localhost:3000/mean-movies');
+    mongoose.connect('mongodb://localhost/mean-movies');
 }
 
-mongoose.connection.on('error', function(error) {
-    console.log('MongoDB connection error:' + error);
-    process.exit(-1);
-});
+mongoose.connection.on('error', function(err) {
+        console.error('MongoDB connection error: ' + err);
+        process.exit(-1);
+    }
+);
 
-mongoose.connection.on('open', function() {
-    console.log('Mongoose has connected to MongoDB.');
+mongoose.connection.once('open', function() {
+    console.log("Mongoose has connected to MongoDB!");
 });
 
 
 function quit() {
-    console.log('Mongoose disconnecting.');
     mongoose.disconnect();
+    console.log('\nQuitting!');
 }
 
-function handleError(error) {
-    console.log('ERROR: ', error);
+function handleError(err) {
+    console.error('ERROR:', err);
     quit();
-    return error;
+    return err;
 }
 
-
-console.log('starting to seed database...');
 
 Movie.remove({})
     .then(function() {
-        console.log('creating new movies...');
-        var starWars;
-        var groundhogDay;
-        var patriotGames;
+        console.log('creating some new movies...');
+        const starWars     = new Movie({ title: 'Star Wars',  genre: 'Science Fiction' });
+        const groundhogDay = new Movie({ title: 'Groundhog Day', genre: 'Comedy' });
+        const patriotGames = new Movie({ title: 'Patriot Games', genre: 'Action' });
+        return Movie.create([starWars, groundhogDay, patriotGames]);
     })
-    .catch(handleError());
-
-
-
-
-
-
-
-
-
+    .then(function(savedMovies) {
+        console.log('Just saved', savedMovies.length, 'movies.');
+        return Movie.find({});
+    })
+    .then(function(allMovies) {
+        console.log('Printing all movies:');
+        allMovies.forEach(function(movie) {
+            console.log(movie);
+        });
+        quit();
+    })
+    .catch(handleError);

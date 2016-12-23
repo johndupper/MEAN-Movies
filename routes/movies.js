@@ -16,12 +16,23 @@ router.get('/', function(req, res, next) {
         .then(function(allMovies) {
             res.json(allMovies);
         })
-        .catch(makeError);
+        .catch(function(error) {
+            return next(error);
+        });
 });
 
-
-
-
+router.get('/:id', function(req, res, next) {
+    Movie.findById(req.params._id)
+        .then(function(movie) {
+            if (!movie) {
+                return next(makeError(res, 'There\'s nothing to see here!', 404));
+            }
+            res.json(movie);
+        })
+        .catch(function(error) {
+            return next(error);
+        });
+});
 
 
 module.exports = router;
